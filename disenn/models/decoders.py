@@ -55,6 +55,7 @@ class ConvDecoder(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass of a convolutional decoder"""
         batch_size = x.shape[0]
         x = self.fc_block(x)
         x = x.view(batch_size, *self.conv_shape)
