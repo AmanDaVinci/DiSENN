@@ -54,7 +54,7 @@ class ConvParameterizer(nn.Module):
             nn.ReLU()
         )
         # final layer to generate the parameters for each concept and class
-        self.concept_class_layer = nn.Linear(h_dim, (num_concepts + num_classes))
+        self.concept_class_layer = nn.Linear(h_dim, (num_concepts * num_classes))
   
     def forward(self, x: torch.Tensor):
         """ Generates relevance scores as parameters for concepts
