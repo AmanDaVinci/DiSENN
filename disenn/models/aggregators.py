@@ -29,5 +29,5 @@ class SumAggregator(nn.Module):
             Predictions for each class of shape (batch_size, num_classes)
             
         """
-        aggregates = torch.bmm(relevances.permute(0, 2, 1), concepts)
+        aggregates = torch.bmm(relevances.permute(0, 2, 1), concepts.unsqueeze(-1)).squeeze(-1)
         return F.log_softmax(aggregates, dim=1)
