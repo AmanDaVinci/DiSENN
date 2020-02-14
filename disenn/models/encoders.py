@@ -55,8 +55,8 @@ class ConvEncoder(nn.Module):
 
     def forward(self, x):
         """Forward pass of a convolutional encoder"""
-        assert len(x.shape)==3 and x.shape[1]==64 and x.shape[2]==64,\
-        "input must be of shape (batch_size x 64 x 64)"
+        assert len(x.shape)==4 and x.shape[2]==64 and x.shape[3]==64,\
+        "input must be of shape (batch_size x 3 x 64 x 64)"
         batch_size = x.shape[0]
         x = self.conv_block(x)
         x = x.view(batch_size, -1)
