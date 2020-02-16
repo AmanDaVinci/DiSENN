@@ -50,8 +50,9 @@ class ConvEncoder(nn.Module):
             nn.Linear(h_dim, h_dim),
             nn.ReLU()
         )
-        # layer which generates mean and log variance
-        self.mu_logvar_layer = nn.Linear(h_dim, self.z_dim * 2)
+        # layers which generates mean and log variance
+        self.mu_layer = nn.Linear(h_dim, self.z_dim)
+        self.logvar_layer = nn.Linear(h_dim, self.z_dim)
 
     def forward(self, x):
         """Forward pass of a convolutional encoder"""
@@ -61,8 +62,7 @@ class ConvEncoder(nn.Module):
         x = self.conv_block(x)
         x = x.view(batch_size, -1)
         x = self.fc_block(x)
-        mu_logvar = self.mu_logvar_layer(x)
-        # separate mean and log variance by unbinding
-        mu, logvar = mu_logvar.view(-1, self.z_dim, 2).unbind(-1)
+        mu = self.mu_layer(x)
+        logvar = self.logvar_layer(x)
         return mu, logvar
 
