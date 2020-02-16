@@ -178,7 +178,7 @@ class DiSENN(nn.Module):
         ax3 = plt.subplot2grid(gridsize, (0, 2))
         ax4 = plt.subplot2grid(gridsize, (0, 3), colspan=col_span)
 
-        ax1.imshow(x.cpu().numpy().transpose(1,2,0))
+        ax1.imshow(x.detach().cpu().numpy().transpose(1,2,0))
         ax1.set_axis_off()
         ax1.set_title(f'Input Prediction: {y_pred.argmax(1).item()}', fontsize=18)
 
