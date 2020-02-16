@@ -41,7 +41,8 @@ class ConvDecoder(nn.Module):
             nn.ReLU(),
             nn.Linear(h_dim, h_dim),
             nn.ReLU(),
-            nn.Linear(h_dim, np.product(self.conv_shape))
+            nn.Linear(h_dim, np.product(self.conv_shape)),
+            nn.ReLU()
         )
         self.tconv_block = nn.Sequential(
             nn.ConvTranspose2d(h_channels, h_channels, kernel_size, stride=2, padding=1),
@@ -50,8 +51,7 @@ class ConvDecoder(nn.Module):
             nn.ReLU(),
             nn.ConvTranspose2d(h_channels, h_channels, kernel_size, stride=2, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(h_channels, out_channels, kernel_size, stride=2, padding=1),
-            nn.ReLU()
+            nn.ConvTranspose2d(h_channels, out_channels, kernel_size, stride=2, padding=1)
         )
 
     def forward(self, x):
