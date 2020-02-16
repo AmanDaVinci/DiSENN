@@ -1,10 +1,12 @@
 import os
+import zipfile
 import subprocess
 import pandas as pd
 import PIL
 from pathlib import Path
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from disenn.utils.download import download_file_from_google_drive
 
 
 class CelebA(Dataset):
@@ -34,7 +36,6 @@ class CelebA(Dataset):
      on computer vision (pp. 3730-3738).
     """
 
-    KAGGLE_FILE = "jessicali9530/celeba-dataset"
     IMG_DIR = "img_align_celeba/img_align_celeba/"
     ATTR_FILE = "list_attr_celeba.csv" 
     PARTITION_FILE = "list_eval_partition.csv"
@@ -42,6 +43,21 @@ class CelebA(Dataset):
     PARTITION_MAP = {'train': 0, 'valid': 1, 'test': 3}
     IMG_CHANNELS = 3
     IMG_SIZE = 64
+    # There currently does not appear to be a easy way to extract 7z in python (without introducing additional
+    # dependencies). The "in-the-wild" (not aligned+cropped) images are only in 7z, so they are not available
+    # right now.
+    FILE_LIST = [
+        # File ID                         MD5 Hash                            Filename
+        ("0B7EVK8r0v71pZjFTYXZWM3FlRnM", "00d2c5bc6d35e252742224ab0c1e8fcb", "img_align_celeba.zip"),
+        # ("0B7EVK8r0v71pbWNEUjJKdDQ3dGc", "b6cd7e93bc7a96c2dc33f819aa3ac651", "img_align_celeba_png.7z"),
+        # ("0B7EVK8r0v71peklHb0pGdDl6R28", "b6cd7e93bc7a96c2dc33f819aa3ac651", "img_celeba.7z"),
+        ("0B7EVK8r0v71pblRyaVFSWGxPY0U", "75e246fa4810816ffd6ee81facbd244c", "list_attr_celeba.txt"),
+        ("1_ee_0u7vcNLOfNLegJRHmolfH5ICW-XS", "32bd1bd63d3c78cd57e08160ec5ed1e2", "identity_CelebA.txt"),
+        ("0B7EVK8r0v71pbThiMVRxWXZ4dU0", "00566efa6fedff7a56946cd1c10f1c16", "list_bbox_celeba.txt"),
+        ("0B7EVK8r0v71pd0FJY3Blby1HUTQ", "cc24ecafdb5b50baae59b03474781f8c", "list_landmarks_align_celeba.txt"),
+        # ("0B7EVK8r0v71pTzJIdlJWdHczRlU", "063ee6ddb681f96bc9ca28c6febb9d1a", "list_landmarks_celeba.txt"),
+        ("0B7EVK8r0v71pY0NSMzRuSXJEVkk", "d32c9cbf5e040fd4025c592c306e6668", "list_eval_partition.txt"),
+    ]
 
     def __init__(self, split: str, data_path: str, download: bool = False, target: str = 'Male'):
         """ Initialize the dataset configurations
@@ -78,8 +94,10 @@ class CelebA(Dataset):
 
     def _download(self, data_path):
         """Downloads the celeba dataset using kaggle api"""
-        subprocess.check_call(["kaggle", "datasets", "download",
-                                self.KAGGLE_FILE, "--path", data_path, "--unzip"])
+        for (file_id, md5, filename) in self.file_list:
+            download_file_from_google_drive(file_id, data_path, filename, md5)
+        with zipfile.ZipFile(data_path / "img_align_celeba.zip", "r") as f:
+            f.extractall(data_path)
     
     def __len__(self):
         return self.df_images.shape[0]
