@@ -59,7 +59,7 @@ def celeba_robustness_loss(x, aggregates, concepts, relevances):
     return robustness_loss.norm(p='fro')
 
 
-def BVAE_loss(x, x_hat, z_mean, z_logvar):
+def bvae_loss(x, x_hat, z_mean, z_logvar):
     """ Calculate Beta-VAE loss as in [1]
 
     Parameters
