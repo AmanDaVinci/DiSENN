@@ -27,7 +27,7 @@ class CelebA(Dataset):
     
     NOTE
     ----
-    The dataset will be downloaded from kaggle
+    The dataset will be downloaded from a Google Drive link
 
     References
     ----------
