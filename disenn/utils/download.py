@@ -15,14 +15,9 @@ def _get_confirm_token(response):
 
 def _save_response_content(response, destination, root, chunk_size=32768):
     with open(destination, "wb") as f:
-        pbar = tqdm(total=None)
-        progress = 0
         for chunk in response.iter_content(chunk_size):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
-                progress += len(chunk)
-                pbar.update(progress - pbar.n)
-        pbar.close()
 
 def calculate_md5(fpath, chunk_size=1024 * 1024):
     md5 = hashlib.md5()
