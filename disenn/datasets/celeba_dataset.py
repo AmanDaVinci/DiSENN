@@ -1,8 +1,9 @@
 import os
+import PIL
+import hashlib
 import zipfile
 import subprocess
 import pandas as pd
-import PIL
 from pathlib import Path
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -48,7 +49,7 @@ class CelebA(Dataset):
     # right now.
     FILE_LIST = [
         # File ID                         MD5 Hash                            Filename
-        ("0B7EVK8r0v71pZjFTYXZWM3FlRnM", "00d2c5bc6d35e252742224ab0c1e8fcb", "img_align_celeba.zip"),
+        # ("0B7EVK8r0v71pZjFTYXZWM3FlRnM", "00d2c5bc6d35e252742224ab0c1e8fcb", "img_align_celeba.zip"),
         # ("0B7EVK8r0v71pbWNEUjJKdDQ3dGc", "b6cd7e93bc7a96c2dc33f819aa3ac651", "img_align_celeba_png.7z"),
         # ("0B7EVK8r0v71peklHb0pGdDl6R28", "b6cd7e93bc7a96c2dc33f819aa3ac651", "img_celeba.7z"),
         ("0B7EVK8r0v71pblRyaVFSWGxPY0U", "75e246fa4810816ffd6ee81facbd244c", "list_attr_celeba.txt"),
@@ -92,12 +93,26 @@ class CelebA(Dataset):
         self.data_path = data_path
         self.target = target
 
-    def _download(self, data_path):
-        """Downloads the celeba dataset using kaggle api"""
-        for (file_id, md5, filename) in self.file_list:
+    @classmethod
+    def _download(cls, data_path):
+        """Downloads the celeba dataset"""
+
+        # small files downloaded from google drive due to quota limits
+        for (file_id, md5, filename) in cls.FILE_LIST:
             download_file_from_google_drive(file_id, data_path, filename, md5)
-        with zipfile.ZipFile(data_path / "img_align_celeba.zip", "r") as f:
-            f.extractall(data_path)
+
+        # images zip file is available at this s3 link        
+        url = "https://s3-us-west-1.amazonaws.com/udacity-dlnfd/datasets/celeba.zip"
+        save_path = Path(data_path) / 'celeba.zip'
+        if os.path.exists(save_path): os.remove(save_path)
+        subprocess.check_call(["curl", "-L", url, "--output", save_path])
+
+        hash_code = '00d2c5bc6d35e252742224ab0c1e8fcb'
+        assert hashlib.md5(open(save_path, 'rb').read()).hexdigest() == hash_code, \
+            '{} file is corrupted.  Remove the file and try again.'.format(save_path)
+
+        with zipfile.ZipFile(save_path) as zf:
+            zf.extractall(data_path)
     
     def __len__(self):
         return self.df_images.shape[0]
