@@ -15,5 +15,6 @@ dependencies:
   - pandas
   - scikit-learn
   - jupyter
-  - kaggle
+  - requests
   - scikit-image
+  - tqdm
