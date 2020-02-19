@@ -18,8 +18,8 @@ def get_dataloader(config):
     assert config["data"] in ["celeba"], "supports CelebA dataset only"
     path = "data/"+config["data"]
 
-    if config.dataloader.lower() == 'celeba':
-        train_dataset = CelebA(split="train", data_path=path, download=True, target=config["target"])
+    if config['data'] == 'celeba':
+        train_dataset = CelebA(split="train", data_path=path, download=config['download'], target=config["target"])
         valid_dataset = CelebA(split="valid", data_path=path, download=False, target=config["target"])
         train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
         valid_dl = DataLoader(valid_dataset, batch_size=config["batch_size"], shuffle=False)
