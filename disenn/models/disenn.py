@@ -91,7 +91,7 @@ class DiSENN(nn.Module):
         explanations = ((concept_mean, concept_logvar), relevances)
         return predictions, explanations, x_reconstruct
 
-    def explain(self, x, contrast_class, num_prototypes=20, traversal_range=0.45, use_cdf=True,
+    def explain(self, x, contrast_class = None, num_prototypes=20, traversal_range=0.45, use_cdf=True,
                 show=False, save_as=None, gridsize=(1, 6), col_span=3, figure_size=(18, 3)):
         """Explains the DiSENN predictions for input x
         
@@ -163,6 +163,8 @@ class DiSENN(nn.Module):
         relevances = relevances.squeeze(0).cpu().detach().numpy()
         predict_class = y_pred.argmax(1).item()
         relevances_pred = relevances[:, predict_class]
+        if contrast_class is None:
+            contrast_class = 1 - predict_class
         relevances_contrast = relevances[:, contrast_class]
         concepts = concepts.squeeze(0)
         product_pred = concepts * relevances_pred

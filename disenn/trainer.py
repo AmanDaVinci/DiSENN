@@ -26,7 +26,9 @@ plt.style.use('seaborn-paper')
 RESULTS = Path("results")
 CHECKPOINTS = Path("checkpoints")
 LOG_DIR = Path("logs/")
+VISUALIZATION_DIR = Path("visualizations/")
 BEST_MODEL_FNAME = "best-model.pt"
+NUM_VISUALIZE = 5
 
 class DiSENN_Trainer():
     """ Trains a DiSENN model
@@ -44,14 +46,19 @@ class DiSENN_Trainer():
             dictionary of parameters that drive the training behaviour
         """
         self.config = config
+
         self.exp_dir = RESULTS / config['exp_name']
         self.exp_dir.mkdir(parents=True, exist_ok=True)
+        
         self.checkpoint_dir = CHECKPOINTS / config['exp_name']
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         self.log_dir = self.exp_dir / LOG_DIR
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.writer = SummaryWriter(log_dir=self.log_dir)
+
+        self.viz_dir = self.exp_dir / VISUALIZATION_DIR
+        self.viz_dir.mkdir(parents=True, exist_ok=True)
 
         log_name = config["exp_name"]+".log"
         log_level = logging.DEBUG if config["debug"] else logging.INFO
@@ -70,6 +77,10 @@ class DiSENN_Trainer():
 
         logging.info(f"Loading data {config['data']} ...")
         self.train_dl, self.valid_dl = get_dataloader(config)
+        
+        # fixed set of validation examples to visualize prediction dynamics
+        x, y = next(iter(self.valid_dl))
+        self.eval_examples = (x[:NUM_VISUALIZE], y[:NUM_VISUALIZE])
 
          # get appropriate models from global namespace and instantiate them
         try:
@@ -133,7 +144,7 @@ class DiSENN_Trainer():
                 self.writer.add_scalar('Loss/Train/Reconstruction_loss', results['reconstruction_loss'], self.current_iter)
                 self.writer.add_scalar('Loss/Train/KL_Divergence', results['kl_divergence'], self.current_iter)
                 self.writer.add_scalar('Loss/Train/Prediction_loss', results['pred_loss'], self.current_iter)
-                logging.info(f"EPOCH:{epoch} STEP:{i}\t Accuracy: {results['accuracy']:.3f} Total Loss: {results['total_loss']:.3f}")
+                logging.debug(f"EPOCH:{epoch} STEP:{i}\t Accuracy: {results['accuracy']:.3f} Total Loss: {results['total_loss']:.3f}")
 
                 if i % self.config['valid_freq'] == 0:
                     self.validate()
@@ -180,6 +191,7 @@ class DiSENN_Trainer():
                 f"Accuracy: {mean_accuracy:.3f} "
                 f"Total Loss: {np.mean(losses):.3f}")
         logging.info(report)
+        self.visualize()
 
     def _batch_iteration(self, x: torch.Tensor, labels: torch.Tensor, training: bool):
         """ Iterate over one batch """
@@ -319,10 +331,20 @@ class DiSENN_Trainer():
         except OSError:
             logging.error(f"No checkpoint exists @ {self.checkpoint_dir}")
         
+    def visualize(self):
+        """ Visualize prediction dynamics on a set of fixed examples """
+        logging.info("Visualizing prediction dynamics")
+        
+        x, y = self.eval_examples
+        self.model.eval()
+        for i in range(NUM_VISUALIZE):
+            figname = self.viz_dir / f"Example[{i}]-Epoch[{self.current_epoch}]-Step[{self.current_iter}].png"
+            self.model.explain(x[i].cpu().detach(), save_as=figname)
+
     def finalize(self):
         """Finalize all necessary operations before stopping
         
         Saves checkpoint
         """
+        self.visualize()
         self.save_checkpoint()
-        # TODO: visualize predictions here
