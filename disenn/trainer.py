@@ -61,21 +61,27 @@ class DiSENN_Trainer():
         self.viz_dir.mkdir(parents=True, exist_ok=True)
 
         log_name = config["exp_name"]+".log"
-        log_level = logging.DEBUG if config["debug"] else logging.INFO
-        logging.basicConfig(format='%(asctime)s - %(levelname)10s - %(funcName)15s : %(message)s',
-                            filename=self.exp_dir / log_name, level=log_level)
+        self.logger = logging.getLogger(__name__)
+        logfile_handler = logging.FileHandler(filename=self.exp_dir / log_name)
+        logfile_handler.setLevel(level = (logging.DEBUG if config["debug"] else logging.INFO))
+        logfile_format = logging.Formatter('%(asctime)s - %(levelname)10s - %(funcName)15s : %(message)s')
+        logfile_handler.setFormatter(logfile_format)
+        self.logger.addHandler(logfile_handler)
+        self.logger.setLevel(level = (logging.DEBUG if config["debug"] else logging.INFO))
 
-        logging.info("-"*50)
-        logging.info(f"EXPERIMENT: {config['exp_name']}")
-        logging.info("-"*50)
+        print(f"Launched successfully... \nLogs available @ {self.exp_dir / log_name}")
+        print("To stop training, press CTRL+C")
+        self.logger.info("-"*50)
+        self.logger.info(f"EXPERIMENT: {config['exp_name']}")
+        self.logger.info("-"*50)
 
-        logging.info(f"Setting seed: {config['seed']}")
+        self.logger.info(f"Setting seed: {config['seed']}")
         np.random.seed(config['seed'])
         torch.manual_seed(config['seed'])
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        logging.info(f"Loading data {config['data']} ...")
+        self.logger.info(f"Loading data {config['data']} ...")
         self.train_dl, self.valid_dl = get_dataloader(config)
         
         # fixed set of validation examples to visualize prediction dynamics
@@ -88,7 +94,7 @@ class DiSENN_Trainer():
             parameterizer = eval(config['parameterizer'])(config['num_concepts'], config['num_classes'])
             aggregator = eval(config['aggregator'])(config['num_classes'])
         except:
-            logging.error("Please make sure you specify the correct Conceptizer, Parameterizer and Aggregator classes")
+            self.logger.error("Please make sure you specify the correct Conceptizer, Parameterizer and Aggregator classes")
             sys.exit(1)
 
         self.pred_loss_fn = F.nll_loss
@@ -101,16 +107,16 @@ class DiSENN_Trainer():
         self.best_accuracy = 0.
 
         self.model = DiSENN(conceptizer, parameterizer, aggregator)
-        logging.info(f"Using device: {config['device']}")
+        self.logger.info(f"Using device: {config['device']}")
         self.model.to(config['device'])
         self.opt = optim.Adam(self.model.parameters(), lr=config['learning_rate'])
 
         if config['pretrain_epochs'] > 0:
             try:
-                logging.info(f"Pre-training Conceptizer for {config['pretrain_epochs']} epochs")
+                self.logger.info(f"Pre-training Conceptizer for {config['pretrain_epochs']} epochs")
                 self.model.conceptizer = self.pretrain_conceptizer()
             except KeyboardInterrupt:
-                logging.warning("Manual interruption registered. Please wait to finalize...")
+                self.logger.warning("Manual interruption registered. Please wait to finalize...")
                 self.finalize()
 
         if 'load_checkpoint' in config:
@@ -123,10 +129,10 @@ class DiSENN_Trainer():
         """
         try:
             if self.config['train']:
-                logging.info(f"Begin training for {self.config['epochs']} epochs")
+                self.logger.info(f"Begin training for {self.config['epochs']} epochs")
                 self.train()
         except KeyboardInterrupt:
-            logging.warning("Manual interruption registered. Please wait to finalize...")
+            self.logger.warning("Manual interruption registered. Please wait to finalize...")
             self.finalize()
 
     def train(self):
@@ -144,7 +150,7 @@ class DiSENN_Trainer():
                 self.writer.add_scalar('Loss/Train/Reconstruction_loss', results['reconstruction_loss'], self.current_iter)
                 self.writer.add_scalar('Loss/Train/KL_Divergence', results['kl_divergence'], self.current_iter)
                 self.writer.add_scalar('Loss/Train/Prediction_loss', results['pred_loss'], self.current_iter)
-                logging.debug(f"EPOCH:{epoch} STEP:{i}\t Accuracy: {results['accuracy']:.3f} Total Loss: {results['total_loss']:.3f}")
+                self.logger.debug(f"EPOCH:{epoch} STEP:{i}\t Accuracy: {results['accuracy']:.3f} Total Loss: {results['total_loss']:.3f}")
 
                 if i % self.config['valid_freq'] == 0:
                     self.validate()
@@ -163,7 +169,7 @@ class DiSENN_Trainer():
         prediction_losses = []
         accuracies = []
 
-        logging.debug("Begin evaluation over validation set")
+        self.logger.debug("Begin evaluation over validation set")
         with torch.no_grad():
             for i, (x, labels) in enumerate(self.valid_dl):
                 results = self._batch_iteration(x, labels, training=False)
@@ -190,7 +196,7 @@ class DiSENN_Trainer():
         report = (f"[Validation]\t"
                 f"Accuracy: {mean_accuracy:.3f} "
                 f"Total Loss: {np.mean(losses):.3f}")
-        logging.info(report)
+        self.logger.info(report)
         self.visualize()
 
     def _batch_iteration(self, x: torch.Tensor, labels: torch.Tensor, training: bool):
@@ -273,7 +279,7 @@ class DiSENN_Trainer():
                           f"Concept loss: {loss.item():.3f} "
                           f"Recon loss: {recon_loss.item():.3f} "
                           f"KL div: {kl_div.item():e} ")
-                logging.info(report)
+                self.logger.info(report)
 
         self.save_checkpoint(file_name="pretrained-conceptizer.pt")
         return self.model.conceptizer
@@ -300,7 +306,7 @@ class DiSENN_Trainer():
             'optimizer': self.opt.state_dict(),
         }
         torch.save(state, file_name)
-        logging.info(f"Checkpoint saved @ {file_name}")
+        self.logger.info(f"Checkpoint saved @ {file_name}")
 
     def load_checkpoint(self, file_name: str):
         """Load the checkpoint with the given file name
@@ -319,7 +325,7 @@ class DiSENN_Trainer():
         """
         try:
             file_name = self.checkpoint_dir / file_name
-            logging.info(f"Loading checkpoint from {file_name}")
+            self.logger.info(f"Loading checkpoint from {file_name}")
             checkpoint = torch.load(file_name, self.config['device'])
 
             self.current_epoch = checkpoint['epoch']
@@ -329,11 +335,11 @@ class DiSENN_Trainer():
             self.opt.load_state_dict(checkpoint['optimizer'])
 
         except OSError:
-            logging.error(f"No checkpoint exists @ {self.checkpoint_dir}")
+            self.logger.error(f"No checkpoint exists @ {self.checkpoint_dir}")
         
     def visualize(self):
         """ Visualize prediction dynamics on a set of fixed examples """
-        logging.info("Visualizing prediction dynamics")
+        self.logger.info("Visualizing prediction dynamics")
         
         x, y = self.eval_examples
         self.model.eval()
