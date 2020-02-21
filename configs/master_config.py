@@ -8,6 +8,7 @@ CONFIG = {
     "seed": 42,
     "debug": True,
     "device": 'cpu',
+    "num_workers": 4,
     "train": True,
     "download": False,
     "valid_freq": 2,
