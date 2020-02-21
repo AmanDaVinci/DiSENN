@@ -279,13 +279,16 @@ class DiSENN_Trainer():
                 self.writer.add_scalar('PreTraining/Total_Loss', loss.item(), current_iter)
                 self.writer.add_scalar('PreTraining/Reconstruction', recon_loss.item(), current_iter)
                 self.writer.add_scalar('PreTraining/KL_Divergence', kl_div.item(), current_iter)
-                report = (f"[Pre-Training] EPOCH:{epoch} STEP:{i}\t"
-                          f"Concept loss: {loss.item():.3f} "
-                          f"Recon loss: {recon_loss.item():.3f} "
-                          f"KL div: {kl_div.item():e} ")
-                self.logger.debug(report)
+                    
+                if i % self.config['save_freq'] == 0:
+                    figname = self.viz_dir / f"Pretraining-Epoch[{current_epoch}]-Step[{current_iter}].png"
+                    report = (f"[Pre-Training] EPOCH:{epoch} STEP:{i}\t"
+                            f"Concept loss: {loss.item():.3f} "
+                            f"Recon loss: {recon_loss.item():.3f} "
+                            f"KL div: {kl_div.item():e} ")
+                    self.logger.debug(report)
+                    self.save_checkpoint(file_name="pretrained-conceptizer.pt")
 
-        self.save_checkpoint(file_name="pretrained-conceptizer.pt")
         return self.model.conceptizer
     
     def save_checkpoint(self, file_name: str = None):
