@@ -281,7 +281,7 @@ class DiSENN_Trainer():
                 self.writer.add_scalar('PreTraining/KL_Divergence', kl_div.item(), current_iter)
                     
                 if i % self.config['save_freq'] == 0:
-                    figname = self.viz_dir / f"Pretraining-Epoch[{current_epoch}]-Step[{current_iter}].png"
+                    figname = self.viz_dir / f"Pretraining-Epoch[{epoch}]-Step[{current_iter}].png"
                     report = (f"[Pre-Training] EPOCH:{epoch} STEP:{i}\t"
                             f"Concept loss: {loss.item():.3f} "
                             f"Recon loss: {recon_loss.item():.3f} "
