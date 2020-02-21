@@ -265,7 +265,7 @@ class DiSENN_Trainer():
     def pretrain_conceptizer(self):
         optimizer = optim.Adam(self.model.conceptizer.parameters())
         self.model.conceptizer.train()
-
+        current_iter = 0
         for epoch in range(self.config['pretrain_epochs']):
             for i, (x, _) in enumerate(self.train_dl):
                 x = x.to(self.config['device'])
@@ -275,11 +275,15 @@ class DiSENN_Trainer():
                 loss = recon_loss + self.config['pre-beta'] * kl_div
                 loss.backward()
                 optimizer.step()
+                current_iter += 1
+                self.writer.add_scalar('PreTraining/Total_Loss', loss.item(), current_iter)
+                self.writer.add_scalar('PreTraining/Reconstruction', recon_loss.item(), current_iter)
+                self.writer.add_scalar('PreTraining/KL_Divergence', kl_div.item(), current_iter)
                 report = (f"[Pre-Training] EPOCH:{epoch} STEP:{i}\t"
                           f"Concept loss: {loss.item():.3f} "
                           f"Recon loss: {recon_loss.item():.3f} "
                           f"KL div: {kl_div.item():e} ")
-                self.logger.info(report)
+                self.logger.debug(report)
 
         self.save_checkpoint(file_name="pretrained-conceptizer.pt")
         return self.model.conceptizer
