@@ -11,6 +11,6 @@ CONFIG = {
     "num_workers": 4,
     "train": True,
     "download": False,
-    "valid_freq": 2,
-    "save_freq": 2
+    "valid_freq": 10,
+    "save_freq": 50
 }
