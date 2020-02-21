@@ -282,6 +282,7 @@ class DiSENN_Trainer():
                     
                 if i % self.config['save_freq'] == 0:
                     figname = self.viz_dir / f"Pretraining-Epoch[{epoch}]-Step[{current_iter}].png"
+                    plt.imsave(fname=figname, arr=x_reconstruct[0].detach().cpu().numpy().transpose(1,2,0))
                     report = (f"[Pre-Training] EPOCH:{epoch} STEP:{i}\t"
                             f"Concept loss: {loss.item():.3f} "
                             f"Recon loss: {recon_loss.item():.3f} "
