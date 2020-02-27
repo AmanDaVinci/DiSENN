@@ -14,8 +14,8 @@ config = {
     "aggregator": 'SumAggregator',
     "concept_loss": 'bvae_loss',
     "robustness_loss": 'celeba_robustness_loss',
-    "learning_rate": 1e-3,
-    "batch_size": 64,
+    "learning_rate": 3e-4,
+    "batch_size": 128,
     "pretrain_epochs": 0,
     "pre-beta": 1
 }

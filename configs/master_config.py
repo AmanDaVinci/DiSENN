@@ -6,11 +6,11 @@ and updated with the new information defined for each config
 
 CONFIG = {
     "seed": 42,
-    "debug": True,
-    "device": 'cpu',
+    "debug": False,
+    "device": 'cuda',
     "num_workers": 4,
     "train": True,
     "download": False,
-    "valid_freq": 10,
-    "save_freq": 50
+    "valid_freq": 50,
+    "save_freq": 100
 }
