@@ -354,7 +354,7 @@ class DiSENN_Trainer():
         fig_size = (18, 5 * self.config['num_concepts']/10) # heuristic works for 64x64 images only
         for i in range(NUM_VISUALIZE):
             figname = self.viz_dir / f"Example[{i}]-Epoch[{self.current_epoch}]-Step[{self.current_iter}].png"
-            self.model.explain(x[i].cpu().detach(), save_as=figname, figure_size=fig_size)
+            self.model.explain(x[i].to(self.config['device']), save_as=figname, figure_size=fig_size)
 
     def finalize(self):
         """Finalize all necessary operations before stopping

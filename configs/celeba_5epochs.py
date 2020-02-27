@@ -1,8 +1,8 @@
 from .master_config import CONFIG
 
 config = {
-    "exp_name": 'celeba_no_pretraining',
-    "epochs": 1,
+    "exp_name": 'celeba_5epochs',
+    "epochs": 5,
     "data": 'celeba',
     "target": 'Male',
     "conceptizer": 'VaeConceptizer',

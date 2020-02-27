@@ -17,7 +17,7 @@ def get_dataloader(config):
     """
     assert config["data"] in ["celeba"], "supports CelebA dataset only"
     path = "data/"+config["data"]
-    pin_memory = True if config['device'] is 'gpu' else False
+    pin_memory = False if config['device'] is 'cpu' else True
     num_workers = config['num_workers']
     if config['data'] == 'celeba':
         train_dataset = CelebA(split="train", data_path=path, download=config['download'], target=config["target"])

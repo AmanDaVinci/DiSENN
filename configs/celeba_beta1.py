@@ -1,13 +1,13 @@
 from .master_config import CONFIG
 
 config = {
-    "exp_name": 'celeba_no_pretraining',
-    "epochs": 1,
+    "exp_name": 'celeba_beta1',
+    "epochs": 5,
     "data": 'celeba',
     "target": 'Male',
     "conceptizer": 'VaeConceptizer',
     "num_concepts": 10,
-    "beta": 4,
+    "beta": 1,
     "parameterizer": 'ConvParameterizer',
     "num_classes": 2,
     "robustness_reg": 1e-4,
