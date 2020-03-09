@@ -12,5 +12,6 @@ CONFIG = {
     "train": True,
     "download": False,
     "valid_freq": 50,
-    "save_freq": 100
+    "save_freq": 100,
+    "anneal_step": 1
 }
