@@ -216,7 +216,8 @@ class DiSENN_Trainer():
             pred_loss = self.pred_loss_fn(y_pred.squeeze(-1), labels)
             robustness_loss = self.robust_loss_fn(x, y_pred, concepts, relevances)
             recon_loss, kl_div = self.concept_loss_fn(x, x_reconstruct, concept_mean, concept_logvar)
-            concept_loss = recon_loss + self.config['beta'] * kl_div
+            anneal = min(1, self.current_iter * self.config['anneal_step'])
+            concept_loss = recon_loss + anneal * self.config['beta'] * kl_div
             total_loss = pred_loss + concept_loss + (self.config['robustness_reg'] * robustness_loss) 
             
             total_loss.backward()
@@ -231,7 +232,8 @@ class DiSENN_Trainer():
                 pred_loss = self.pred_loss_fn(y_pred.squeeze(-1), labels)
                 robustness_loss = torch.tensor(0.) # jacobian cannot be computed in no_grad mode
                 recon_loss, kl_div = self.concept_loss_fn(x, x_reconstruct, concept_mean, concept_logvar)
-                concept_loss = recon_loss + self.config['beta'] * kl_div
+                anneal = min(1, self.current_iter * self.config['anneal_step'])
+                concept_loss = recon_loss + anneal * self.config['beta'] * kl_div
                 total_loss = pred_loss + concept_loss          
 
         accuracy = self.accuracy(y_pred, labels)
